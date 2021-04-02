@@ -1,11 +1,11 @@
 const { expect } = require("chai");
 
-describe("Greeter", function() {
-  it("Should return the new greeting once it's changed", async function() {
-    const Greeter = await ethers.getContractFactory("Greeter");
-    const greeter = await Greeter.deploy("Hello, world!");
+describe("random", function() {
+  it("Should return random number when called", async function() {
+    const random = await ethers.getContractFactory("random");
+    const randomer = await random.deploy();
     
-    await greeter.deployed();
+    await randomer.deployed();
     expect(await greeter.greet()).to.equal("Hello, world!");
 
     await greeter.setGreeting("Hola, mundo!");

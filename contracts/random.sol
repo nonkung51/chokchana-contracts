@@ -12,4 +12,8 @@ contract Random {
         randomNum = from + RandomGenerate.randomGen(to);
         console.log(randomNum);
     }
+
+    function getRandomNum() public view returns (uint256) {
+      return randomNum;
+    }
 }
