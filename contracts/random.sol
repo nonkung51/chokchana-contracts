@@ -9,8 +9,7 @@ contract Random {
     uint256 public randomNum;
 
     function runRandom(uint256 from, uint256 to) public {
-        randomNum = from + RandomGenerate.randomGen(to);
-        console.log(randomNum);
+        randomNum = from + RandomGenerate.randomGen(to - from);
     }
 
     function getRandomNum() public view returns (uint256) {

@@ -1,14 +1,51 @@
 const { expect } = require("chai");
 
 describe("random", function() {
-  it("Should return random number when called", async function() {
-    const random = await ethers.getContractFactory("random");
+  it("Should return 0 when deployed", async function() {
+    const random = await ethers.getContractFactory("Random");
     const randomer = await random.deploy();
     
     await randomer.deployed();
-    expect(await greeter.greet()).to.equal("Hello, world!");
+    expect(await randomer.getRandomNum()).to.equal(0);
+  });
 
-    await greeter.setGreeting("Hola, mundo!");
-    expect(await greeter.greet()).to.equal("Hola, mundo!");
+  it("Should return random number when call runRandom (3 digits)", async function() {
+    const random = await ethers.getContractFactory("Random");
+    const randomer = await random.deploy();
+    
+    await randomer.deployed();
+
+    await randomer.runRandom(100, 999);
+    expect(await randomer.getRandomNum()).to.be.within(100, 999);;
+  });
+
+  it("Should return random number when call runRandom (4 digits)", async function() {
+    const random = await ethers.getContractFactory("Random");
+    const randomer = await random.deploy();
+    
+    await randomer.deployed();
+
+    await randomer.runRandom(1000, 9999);
+    expect(await randomer.getRandomNum()).to.be.within(1000, 9999);;
+  });
+
+  it("Should return random number when call runRandom (6 digits)", async function() {
+    const random = await ethers.getContractFactory("Random");
+    const randomer = await random.deploy();
+    
+    await randomer.deployed();
+
+    await randomer.runRandom(100000, 999999);
+    expect(await randomer.getRandomNum()).to.be.within(100000, 999999);;
+  });
+
+  it("Should return random number when call runRandom (8 digits)", async function() {
+    const random = await ethers.getContractFactory("Random");
+    const randomer = await random.deploy();
+    
+    await randomer.deployed();
+    
+    await randomer.runRandom(10000000, 99999999);
+    expect(await randomer.getRandomNum()).to.be.within(10000000, 99999999);;
   });
 });
