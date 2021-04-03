@@ -12,7 +12,7 @@ contract THBToken is ERC20 {
     }
 
     function mint(uint256 amount) public {
-        require(msg.sender == minter);
+        require(msg.sender == minter, "Minting new token require minter!");
         _mint(minter, amount);
     }
 }

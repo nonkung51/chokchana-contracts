@@ -12,7 +12,7 @@ describe('thbToken', function () {
 		);
 	});
 
-	it('Should beable to mint supply', async function () {
+	it('Should be able to mint supply if minter', async function () {
 		const [owner] = await ethers.getSigners();
 		const _token = await ethers.getContractFactory('THBToken');
 		const thbToken = await _token.deploy();
@@ -24,6 +24,16 @@ describe('thbToken', function () {
 		);
 	});
 
+	it('Should not be able to mint supply if not minter', async function () {
+		const [owner, addr1] = await ethers.getSigners();
+		const _token = await ethers.getContractFactory('THBToken');
+		const thbToken = await _token.deploy();
+
+		await thbToken.deployed();
+		await thbToken.connect(addr1).mint(1000);
+		expect(await thbToken.balanceOf(owner.address)).to.not.equal(1000);
+	});
+
 	it('Should transfer thbToken between accounts', async function () {
 		const [owner, addr1, addr2] = await ethers.getSigners();
 
@@ -31,7 +41,7 @@ describe('thbToken', function () {
 
 		const thbToken = await _token.deploy();
 
-        await thbToken.mint(100);
+		await thbToken.mint(100);
 		await thbToken.transfer(addr1.address, 50);
 		expect(await thbToken.balanceOf(addr1.address)).to.equal(50);
 
