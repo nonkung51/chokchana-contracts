@@ -30,8 +30,10 @@ describe('thbToken', function () {
 		const thbToken = await _token.deploy();
 
 		await thbToken.deployed();
-		await thbToken.connect(addr1).mint(1000);
-		expect(await thbToken.balanceOf(owner.address)).to.not.equal(1000);
+
+		await expect(
+			await thbToken.connect(addr1).mint(1000)
+		).to.be.revertedWith("Minting new token require minter");
 	});
 
 	it('Should transfer thbToken between accounts', async function () {
