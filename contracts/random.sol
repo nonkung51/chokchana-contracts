@@ -13,6 +13,6 @@ contract Random {
     }
 
     function getRandomNum() public view returns (uint256) {
-      return randomNum;
+        return randomNum;
     }
 }
