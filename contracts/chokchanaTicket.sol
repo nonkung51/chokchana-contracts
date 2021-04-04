@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract ChokchanaTicket is ERC721, ERC721Enumerable, Ownable {
     uint256 curId;
     mapping(uint256 => uint256) public numbers;
+    mapping(uint256 => uint256) public numOfNumbers;
     mapping(uint256 => uint) public issuesDate;
     mapping(uint256 => bool) public exists;
     bool public multiple;
@@ -27,6 +28,12 @@ contract ChokchanaTicket is ERC721, ERC721Enumerable, Ownable {
         issuesDate[curId] = block.timestamp;
         exists[number] = true;
         
+        if (exists[number]) {
+            numOfNumbers[number] = numOfNumbers[number] + 1;
+        } else {
+            numOfNumbers[number] = 1;
+        }
+        
         // Mint and send to msg.sender
         _safeMint(msg.sender, curId);
         curId += 1;
@@ -34,6 +41,10 @@ contract ChokchanaTicket is ERC721, ERC721Enumerable, Ownable {
     
     function get(uint256 idx) public view returns(uint256, uint) {
         return (numbers[idx], issuesDate[idx]);
+    }
+    
+    function getNumberOf(uint256 ticketNumber) public view returns (uint256) {
+        return numOfNumbers[ticketNumber];
     }
     
     /* ERC721Enumerable require to override */
