@@ -9,42 +9,52 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ChokchanaTicket is ERC721, ERC721Enumerable, Ownable {
     uint256 curId;
-    mapping(uint256 => uint256) public numbers;
-    mapping(uint256 => uint256) public numOfNumbers;
-    mapping(uint256 => uint) public issuesDate;
-    mapping(uint256 => bool) public exists;
+    uint256 n;
+    mapping(uint256 => uint256) public rounds;
+    mapping(uint256 => mapping(uint256 => uint256)) public numbers;
+    mapping(uint256 => mapping(uint256 => uint256)) public numOfNumbers;
+    mapping(uint256 => mapping(uint256 => uint)) public issuesDate;
+    mapping(uint256 => mapping(uint256 => bool)) public exists;
     bool public multiple;
     
     constructor(bool _multiple) ERC721("Chokchana Ticket", "CCNT") Ownable() {
         curId = 0;
         multiple = _multiple;
+        n = 1;
+    }
+    
+    // reset all data for next round
+    function nextN() public onlyOwner {
+        n += 1;
     }
     
     function mint(uint256 number) public {
-        if (!multiple && exists[number]) {
+        if (!multiple && exists[n][number]) {
             revert("Can only mint 1 ticket of same number!");
         }
-        numbers[curId] = number;
-        issuesDate[curId] = block.timestamp;
-        exists[number] = true;
+        numbers[n][curId] = number;
+        issuesDate[n][curId] = block.timestamp;
+        exists[n][number] = true;
         
-        if (exists[number]) {
-            numOfNumbers[number] = numOfNumbers[number] + 1;
+        if (exists[n][number]) {
+            numOfNumbers[n][number] = numOfNumbers[n][number] + 1;
         } else {
-            numOfNumbers[number] = 1;
+            numOfNumbers[n][number] = 1;
         }
+        
+        rounds[curId] = n;
         
         // Mint and send to msg.sender
         _safeMint(msg.sender, curId);
         curId += 1;
     }
     
-    function get(uint256 idx) public view returns(uint256, uint) {
-        return (numbers[idx], issuesDate[idx]);
+    function get(uint256 id) public view returns(uint256, uint, uint256) {
+        return (numbers[rounds[id]][id], issuesDate[rounds[id]][id], rounds[id]);
     }
     
     function getNumberOf(uint256 ticketNumber) public view returns (uint256) {
-        return numOfNumbers[ticketNumber];
+        return numOfNumbers[n][ticketNumber];
     }
     
     /* ERC721Enumerable require to override */
