@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.3;
 
-interface IChockchanaTicket {
+interface IChokchanaTicket {
     // Chokchana
     function nextN() external;
     function mint(uint256 number) external;
