@@ -15,7 +15,7 @@ describe('random', function () {
 
 		await randomer.deployed();
 
-		await randomer.runRandom(100, 999);
+		await randomer.runRandom(100, 999, 1);
 		expect(await randomer.getRandomNum()).to.be.within(100, 999);
 	});
 
@@ -25,7 +25,7 @@ describe('random', function () {
 
 		await randomer.deployed();
 
-		await randomer.runRandom(1000, 9999);
+		await randomer.runRandom(1000, 9999, 1);
 		expect(await randomer.getRandomNum()).to.be.within(1000, 9999);
 	});
 
@@ -35,7 +35,7 @@ describe('random', function () {
 
 		await randomer.deployed();
 
-		await randomer.runRandom(100000, 999999);
+		await randomer.runRandom(100000, 999999, 1);
 		expect(await randomer.getRandomNum()).to.be.within(100000, 999999);
 	});
 
@@ -45,7 +45,7 @@ describe('random', function () {
 
 		await randomer.deployed();
 
-		await randomer.runRandom(10000000, 99999999);
+		await randomer.runRandom(10000000, 99999999, 1);
 		expect(await randomer.getRandomNum()).to.be.within(
 			10000000,
 			99999999

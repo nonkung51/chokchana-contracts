@@ -9,40 +9,51 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ChokchanaTicket is ERC721, ERC721Enumerable, Ownable {
     uint256 curId;
-    uint256 n;
+    uint256 curRound;
     mapping(uint256 => uint256) public rounds;
     mapping(uint256 => mapping(uint256 => uint256)) public numbers;
     mapping(uint256 => mapping(uint256 => uint256)) public numOfNumbers;
     mapping(uint256 => mapping(uint256 => uint)) public issuesDate;
     mapping(uint256 => mapping(uint256 => bool)) public exists;
+    mapping(uint256 => bool) public claimed;
     bool public multiple;
     
-    constructor(bool _multiple) ERC721("Chokchana Ticket", "CCNT") Ownable() {
+    uint256 startNumber;
+    uint256 endNumber;
+    
+    constructor(bool _multiple, uint256 _startNumber, uint256 _endNumber) ERC721("Chokchana Ticket", "CCNT") Ownable() {
         curId = 0;
         multiple = _multiple;
-        n = 1;
+        curRound = 1;
+        
+        startNumber = _startNumber;
+        endNumber = _endNumber;
+    }
+    
+    function range() public view returns(uint256, uint256) {
+        return (startNumber, endNumber);
     }
     
     // reset all data for next round
     function nextN() public onlyOwner {
-        n += 1;
+        curRound += 1;
     }
     
-    function mint(uint256 number) public {
-        if (!multiple && exists[n][number]) {
+    function mint(uint256 number) public onlyOwner {
+        if (!multiple && exists[curRound][number]) {
             revert("Can only mint 1 ticket of same number!");
         }
-        numbers[n][curId] = number;
-        issuesDate[n][curId] = block.timestamp;
-        exists[n][number] = true;
+        numbers[curRound][curId] = number;
+        issuesDate[curRound][curId] = block.timestamp;
+        exists[curRound][number] = true;
         
-        if (exists[n][number]) {
-            numOfNumbers[n][number] = numOfNumbers[n][number] + 1;
+        if (exists[curRound][number]) {
+            numOfNumbers[curRound][number] = numOfNumbers[curRound][number] + 1;
         } else {
-            numOfNumbers[n][number] = 1;
+            numOfNumbers[curRound][number] = 1;
         }
         
-        rounds[curId] = n;
+        rounds[curId] = curRound;
         
         // Mint and send to msg.sender
         _safeMint(msg.sender, curId);
@@ -54,7 +65,7 @@ contract ChokchanaTicket is ERC721, ERC721Enumerable, Ownable {
     }
     
     function getNumberOf(uint256 ticketNumber) public view returns (uint256) {
-        return numOfNumbers[n][ticketNumber];
+        return numOfNumbers[curRound][ticketNumber];
     }
     
     /* ERC721Enumerable require to override */
