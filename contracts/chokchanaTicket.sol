@@ -35,7 +35,7 @@ contract ChokchanaTicket is ERC721, ERC721Enumerable, Ownable {
     }
     
     // reset all data for next round
-    function nextN() public onlyOwner {
+    function nextRound() public onlyOwner {
         curRound += 1;
     }
     
@@ -43,6 +43,11 @@ contract ChokchanaTicket is ERC721, ERC721Enumerable, Ownable {
         if (!multiple && exists[curRound][number]) {
             revert("Can only mint 1 ticket of same number!");
         }
+
+        if (number < startNumber || number > endNumber) {
+            revert("Can only mint ticket in range of startNumber -> endNumber");
+        }
+        
         numbers[curRound][curId] = number;
         issuesDate[curRound][curId] = block.timestamp;
         exists[curRound][number] = true;
