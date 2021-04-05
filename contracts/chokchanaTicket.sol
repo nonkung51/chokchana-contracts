@@ -39,7 +39,7 @@ contract ChokchanaTicket is ERC721, ERC721Enumerable, Ownable {
         curRound += 1;
     }
     
-    function mint(uint256 number) public onlyOwner {
+    function mint(uint256 number, address to) public /*onlyOwner*/ {
         if (!multiple && exists[curRound][number]) {
             revert("Can only mint 1 ticket of same number!");
         }
@@ -61,7 +61,7 @@ contract ChokchanaTicket is ERC721, ERC721Enumerable, Ownable {
         rounds[curId] = curRound;
         
         // Mint and send to msg.sender
-        _safeMint(msg.sender, curId);
+        _safeMint(to, curId);
         curId += 1;
     }
     

@@ -4,8 +4,8 @@ pragma solidity ^0.8.3;
 
 interface IChokchanaTicket {
     // Chokchana
-    function nextN() external;
-    function mint(uint256 number) external;
+    function nextRound() external;
+    function mint(uint256 number, address to) external;
     function get(uint256 id) external view returns(uint256, uint, uint256);
     function getNumberOf(uint256 ticketNumber) external view returns (uint256);
     function range() external view returns(uint256, uint256);
