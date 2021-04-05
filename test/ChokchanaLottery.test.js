@@ -11,8 +11,22 @@ describe('ChokchanaLottery', function () {
         await lottery.deployed();
 
         await lottery.drawRewards();
-        expect((await lottery.getReward(1, 0)).toNumber()).to.be.within(1000, 9999);;
-        expect((await lottery.getReward(1, 1)).toNumber()).to.be.within(1000, 9999);;
-        expect((await lottery.getReward(1, 2)).toNumber()).to.be.within(1000, 9999);;
+        expect((await lottery.getReward(1, 0)).toNumber()).to.be.within(1000, 9999);
+        expect((await lottery.getReward(1, 1)).toNumber()).to.be.within(1000, 9999);
+        expect((await lottery.getReward(1, 2)).toNumber()).to.be.within(1000, 9999);
+    });
+
+    it('Should be able to bought ticket', async function () {
+        // deploy buyingToken
+
+        // deploy Ticket smart contract
+
+        // deploy Lottery smart contract
+
+        // approve buyingToken to Lottery smart contract
+
+        // try buying ticket
+
+        // check expect for token bought
     });
 });
