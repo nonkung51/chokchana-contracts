@@ -1,13 +1,15 @@
 const { expect } = require('chai');
 
-describe('ChokchanaTicket', function () {
+describe('ChokchanaTicket', async function () {
+	const [owner] = await ethers.getSigners();
+
 	it('Should be able to minting multiple number of Ticket (if multiple selected)', async function () {
 		const _ticket = await ethers.getContractFactory('ChokchanaTicket');
 		const ticket = await _ticket.deploy(true, 1000, 9999);
 
 		await ticket.deployed();
-		await ticket.mint(2312);
-		await ticket.mint(2312);
+		await ticket.mint(2312, owner.address);
+		await ticket.mint(2312, owner.address);
 		expect(await ticket.getNumberOf(2312)).to.equal(await ticket.totalSupply());
 	});
 
@@ -30,7 +32,7 @@ describe('ChokchanaTicket', function () {
 		const ticketNo = 2312;
 
 		await ticket.deployed();
-		await ticket.mint(ticketNo);
+		await ticket.mint(ticketNo, owner.address);
 		expect(await ticket.getNumberOf(ticketNo)).to.equal(await ticket.totalSupply());
 		const ticketData = await ticket.get(0);
 		expect(ticketData[0].toNumber()).to.equal(ticketNo);
@@ -44,11 +46,11 @@ describe('ChokchanaTicket', function () {
 		const ticketNo = 2312;
 
 		await ticket.deployed();
-		await ticket.mint(ticketNo);
+		await ticket.mint(ticketNo, owner.address);
 		let ticketData = await ticket.get(0);
 		expect(ticketData[2].toNumber()).to.equal(1);
 		await ticket.nextRound();
-		await ticket.mint(ticketNo);
+		await ticket.mint(ticketNo, owner.address);
 		ticketData = await ticket.get(1);
 		expect(ticketData[2].toNumber()).to.equal(2);
 	});

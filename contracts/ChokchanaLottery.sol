@@ -23,7 +23,7 @@ contract ChokchanaLottery is Ownable {
         ticketPrice = _ticketPrice;
     }
 
-    function boughtTicket(uint256 number) public {
+    function buyTicket(uint256 number) public {
         buyingCurrency.transferFrom(msg.sender, address(this), ticketPrice);
         ticket.mint(number, msg.sender);
     }
