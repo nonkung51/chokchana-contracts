@@ -40,7 +40,7 @@ contract ChokchanaLottery is Ownable {
         require(percentage <= 100, "require percentage to be in range 1 - 100!!");
         require(percentage > 0, "require percentage to be more than 0!!");
 
-        // TODO: This might be not so safe!!
+        // TODO: This might be not so safe!
 
         rewardsPercentage[rank] = percentage;
     }
@@ -73,6 +73,7 @@ contract ChokchanaLottery is Ownable {
             // If picked reward is not bought then added it to carryOnReward for next round
             if(mintedTickets[curRound][rewardNumbers[curRound][i]]) {
                 claimableReward[curRound][rewardNumbers[curRound][i]] = allocatableReward.mul(rewardsPercentage[i]).div(100);
+                console.log(claimableReward[curRound][rewardNumbers[curRound][i]], rewardNumbers[curRound][i]);
             } else {
                 carryOnReward += allocatableReward.mul(rewardsPercentage[i]).div(100);
             }
@@ -89,5 +90,9 @@ contract ChokchanaLottery is Ownable {
 
     function getClaimInfo(uint8 round, uint8 number) public view returns (uint256) {
         return claimableReward[round][number];
+    }
+
+    function getTotalReward() public view returns (uint256) {
+        return carryOnReward.add(curReward);
     }
 }

@@ -83,7 +83,7 @@ describe('ChokchanaLottery', function () {
 
         // try (every) buying ticket
         expect((await ticket.balanceOf(owner.address)).toNumber()).to.equal(0); // check balance before buying
-        for (let i = 10; i< 100; i++) {
+        for (let i = 10; i< 30; i++) {
             await lottery.buyTicket(i);
         }
 
@@ -91,5 +91,7 @@ describe('ChokchanaLottery', function () {
 
         const firstWinner = (await lottery.getReward(1, 0)).toNumber();
         console.log(`first winner: ${firstWinner}`, await (lottery.getClaimInfo(1, firstWinner)));
+        
+        console.log('total reward:', await (lottery.getTotalReward()));
     });
 });
