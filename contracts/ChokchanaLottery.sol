@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0
+
 pragma solidity ^0.8.3;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -33,18 +35,21 @@ contract ChokchanaLottery is Ownable {
     }
 
     function setReward(uint8 rank, uint256 percentage) public onlyOwner {
-        require(rank <= noOfRank, "require rank to be less than number of rank!");
-        require(rank > 0, "require rank to be more than 0!!");
+        require(rank < noOfRank, "require rank to be less than number of rank!");
+        require(rank >= 0, "require rank to be more than 0!!");
         require(percentage <= 100, "require percentage to be in range 1 - 100!!");
         require(percentage > 0, "require percentage to be more than 0!!");
+
+        // TODO: This might be not so safe!!
 
         rewardsPercentage[rank] = percentage;
     }
 
     function buyTicket(uint256 number) public {
         buyingCurrency.transferFrom(msg.sender, address(this), ticketPrice);
-        curReward += ticketPrice;
+        curReward = curReward.add(ticketPrice);
         ticket.mint(number, msg.sender);
+        mintedTickets[curRound][number] = true;
     }
     
     function drawRewards() public onlyOwner {
@@ -53,26 +58,15 @@ contract ChokchanaLottery is Ownable {
             rewardNumbers[curRound][i] = runRandom(startNumber, endNumber, i);
         }
         distributeReward();
-        curRound += 1;
+        curRound.add(1);
         curReward = 0;
     }
 
     function distributeReward() private {
-        // for (uint8 i = 0; i < noOfRank; i++) {
-            // No one bought picked reward!!
-        //     if(!mintedTickets[curRound][rewardNumbers[curRound][i]]) {
-        //         carryOnReward += 
-        //     }
-        // }
-
-        // 95 = 100 - [reserved as fee]
         uint256 allocatableReward = curReward.mul(95).div(100).add(carryOnReward);
 
-        // console.log(allocatableReward);
-
-        // uint256 firstReward = allocatableReward.mul(50).div(100);
-        // uint256 secondReward = allocatableReward.mul(30).div(100);
-        // uint256 thirdReward = allocatableReward.sub(firstReward).sub(secondReward);
+        console.log('curReward', curReward);
+        console.log('allocatableReward', allocatableReward);
 
         for (uint8 i = 0; i < noOfRank; i++) {
             // Holy fuck!! please don't bug!!
@@ -82,9 +76,7 @@ contract ChokchanaLottery is Ownable {
             } else {
                 carryOnReward += allocatableReward.mul(rewardsPercentage[i]).div(100);
             }
-        }
-        
-        // return (firstReward, secondReward, thirdReward);
+        }   
     }
     
     function runRandom(uint256 from, uint256 to, uint256 seed) private view returns (uint256) {
@@ -93,5 +85,9 @@ contract ChokchanaLottery is Ownable {
     
     function getReward(uint8 round, uint8 rank) public view returns (uint256) {
         return rewardNumbers[round][rank];
+    }
+
+    function getClaimInfo(uint8 round, uint8 number) public view returns (uint256) {
+        return claimableReward[round][number];
     }
 }
