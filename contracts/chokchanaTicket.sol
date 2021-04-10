@@ -34,8 +34,12 @@ contract ChokchanaTicket is ERC721, ERC721Enumerable, Ownable {
     }
     
     // reset all data for next round
-    function nextRound() public onlyOwner {
+    function nextRound() public /*onlyOwner*/ {
         curRound += 1;
+    }
+
+    function setClaim(uint256 id) public /*onlyOwner*/ {
+        claimed[id] = true;
     }
     
     function mint(uint256 number, address to) public /*onlyOwner*/ {
@@ -63,12 +67,12 @@ contract ChokchanaTicket is ERC721, ERC721Enumerable, Ownable {
         curId += 1;
     }
     
-    function get(uint256 id) public view returns(uint256, uint256) {
-        return (numbers[rounds[id]][id], rounds[id]);
+    function get(uint256 id) public view returns(uint256, uint256, bool) {
+        return (numbers[rounds[id]][id], rounds[id], claimed[id]);
     }
     
-    function getNumberOf(uint256 ticketNumber) public view returns (uint256) {
-        return numOfNumbers[curRound][ticketNumber];
+    function getNumberOf(uint256 round, uint256 ticketNumber) public view returns (uint256) {
+        return numOfNumbers[round][ticketNumber];
     }
     
     /* ERC721Enumerable require to override */

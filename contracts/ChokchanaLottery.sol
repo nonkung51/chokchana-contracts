@@ -59,6 +59,7 @@ contract ChokchanaLottery is Ownable {
         }
         distributeReward();
         curRound.add(1);
+        ticket.nextRound();
         curReward = 0;
     }
 
@@ -71,8 +72,9 @@ contract ChokchanaLottery is Ownable {
         for (uint8 i = 0; i < noOfRank; i++) {
             // Holy fuck!! please don't bug!!
             // If picked reward is not bought then added it to carryOnReward for next round
-            if(mintedTickets[curRound][rewardNumbers[curRound][i]]) {
-                claimableReward[curRound][rewardNumbers[curRound][i]] = allocatableReward.mul(rewardsPercentage[i]).div(100);
+            uint256 numOfTicket = ticket.getNumberOf(curRound, rewardNumbers[curRound][i]);
+            if(numOfTicket != 0) {
+                claimableReward[curRound][rewardNumbers[curRound][i]] = allocatableReward.mul(rewardsPercentage[i]).div(100).div(numOfTicket);
                 console.log(claimableReward[curRound][rewardNumbers[curRound][i]], rewardNumbers[curRound][i]);
             } else {
                 carryOnReward += allocatableReward.mul(rewardsPercentage[i]).div(100);
@@ -82,11 +84,14 @@ contract ChokchanaLottery is Ownable {
 
     function claimReward(uint256 ticketId) public {
         require(ticket.ownerOf(ticketId) == msg.sender, "Require owner of token!!");
-        (uint256 number, uint256 round) = ticket.get(ticketId);
+        (uint256 number, uint256 round, bool claimed) = ticket.get(ticketId);
         require(claimableReward[round][number] > 0, "You are not eligible for reward claim!");
+        require(!claimed, "You already claim reward!");
 
-        buyingCurrency.transfer(msg.sender, claimableReward[round][number]);
-        claimableReward[round][number] = 0;
+        uint256 numOfTicket = ticket.getNumberOf(round, number);
+        buyingCurrency.transfer(msg.sender, claimableReward[round][number].div(numOfTicket));
+        claimableReward[round][number] = claimableReward[round][number].sub(claimableReward[round][number].div(numOfTicket));
+        ticket.setClaim(ticketId);
     }
     
     function runRandom(uint256 from, uint256 to, uint256 seed) private view returns (uint256) {

@@ -10,7 +10,7 @@ describe('ChokchanaTicket', async function () {
 		await ticket.deployed();
 		await ticket.mint(2312, owner.address);
 		await ticket.mint(2312, owner.address);
-		expect(await ticket.getNumberOf(2312)).to.equal(await ticket.totalSupply());
+		expect(await ticket.getNumberOf(1, 2312)).to.equal(await ticket.totalSupply());
 	});
 
 	/*
@@ -33,7 +33,7 @@ describe('ChokchanaTicket', async function () {
 
 		await ticket.deployed();
 		await ticket.mint(ticketNo, owner.address);
-		expect(await ticket.getNumberOf(ticketNo)).to.equal(await ticket.totalSupply());
+		expect(await ticket.getNumberOf(1, ticketNo)).to.equal(await ticket.totalSupply());
 		const ticketData = await ticket.get(0);
 		expect(ticketData[0].toNumber()).to.equal(ticketNo);
 		expect(ticketData[2].toNumber()).to.equal(1);
