@@ -13,7 +13,6 @@ contract ChokchanaTicket is ERC721, ERC721Enumerable, Ownable {
     mapping(uint256 => uint256) public rounds;
     mapping(uint256 => mapping(uint256 => uint256)) public numbers;
     mapping(uint256 => mapping(uint256 => uint256)) public numOfNumbers;
-    mapping(uint256 => mapping(uint256 => uint)) public issuesDate;
     mapping(uint256 => mapping(uint256 => bool)) public exists;
     mapping(uint256 => bool) public claimed;
     bool public multiple;
@@ -49,7 +48,6 @@ contract ChokchanaTicket is ERC721, ERC721Enumerable, Ownable {
         }
         
         numbers[curRound][curId] = number;
-        issuesDate[curRound][curId] = block.timestamp;
         exists[curRound][number] = true;
         
         if (exists[curRound][number]) {
@@ -65,8 +63,8 @@ contract ChokchanaTicket is ERC721, ERC721Enumerable, Ownable {
         curId += 1;
     }
     
-    function get(uint256 id) public view returns(uint256, uint, uint256) {
-        return (numbers[rounds[id]][id], issuesDate[rounds[id]][id], rounds[id]);
+    function get(uint256 id) public view returns(uint256, uint256) {
+        return (numbers[rounds[id]][id], rounds[id]);
     }
     
     function getNumberOf(uint256 ticketNumber) public view returns (uint256) {
