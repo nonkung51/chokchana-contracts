@@ -193,4 +193,74 @@ describe('ChokchanaLottery', function () {
         
         console.log('total reward:', await (lottery.getTotalReward()));
     });
+
+    it('Should be able to claim reward (Multiple)', async function () {
+        // deploy buyingToken
+        const [owner, acc1] = await ethers.getSigners();
+		const _token = await ethers.getContractFactory('THBToken');
+		const thbToken = await _token.deploy();
+		const tokenDeploy = await thbToken.deployed();
+
+        // deploy Ticket smart contract
+        const _ticket = await ethers.getContractFactory('ChokchanaTicket');
+		const ticket = await _ticket.deploy(true, 10, 99);
+		const ticketDeploy = await ticket.deployed();
+
+        // deploy Lottery smart contract
+        const _lottery = await ethers.getContractFactory('ChokchanaLottery');
+        const lottery = await _lottery.deploy(ticketDeploy.address, tokenDeploy.address, 2, 10);
+        const lotteryDeploy = await lottery.deployed();
+
+        // set distribute rate
+        await lottery.setReward(0, 80);
+        await lottery.setReward(1, 20);
+
+        // mint token for self
+        await thbToken.mint(1000000000000);
+
+        // approve buyingToken to Lottery smart contract
+        await thbToken.approve(lotteryDeploy.address, 100000000000000);
+
+        // try (every) buying ticket
+        expect((await ticket.balanceOf(owner.address)).toNumber()).to.equal(0); // check balance before buying
+        for (let i = 10; i < 99; i++) {
+            await lottery.buyTicket(i);
+        }
+        for (let i = 10; i < 99; i++) {
+            await lottery.buyTicket(i);
+        }
+
+        await lottery.drawRewards();
+
+        const firstWinner = (await lottery.getReward(1, 0)).toNumber();
+        let firstWinnerId = 0;
+
+        for (let i = 0; i < 200; i++) {
+            const [number,] = await ticket.get(i);
+            if (number.toNumber() === firstWinner) {
+                firstWinnerId = i;
+                break;
+            }
+        }
+        console.log('first\'s claim id: ', firstWinnerId);
+        console.log('first winner', firstWinner);
+
+        console.log('Balance before cliam: ', (await thbToken.balanceOf(owner.address)).toNumber());
+        
+        await lottery.claimReward(firstWinnerId);
+
+        console.log('Balance after cliam: ', (await thbToken.balanceOf(owner.address)).toNumber());
+    
+        for (let i = firstWinnerId + 1; i < 200; i++) {
+            const [number,] = await ticket.get(i);
+            if (number.toNumber() === firstWinner) {
+                firstWinnerId = i;
+                break;
+            }
+        }
+        console.log('second\'s claim id: ', firstWinnerId);
+        console.log('Balance before cliam: ', (await thbToken.balanceOf(owner.address)).toNumber());
+        await lottery.claimReward(firstWinnerId);
+        console.log('Balance after cliam: ', (await thbToken.balanceOf(owner.address)).toNumber());
+    });
 });
