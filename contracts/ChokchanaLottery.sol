@@ -90,7 +90,7 @@ contract ChokchanaLottery is Ownable {
     }
     
     function runRandom(uint256 from, uint256 to, uint256 seed) private view returns (uint256) {
-        return from + RandomGenerate.randomGen(to, seed);
+        return from + RandomGenerate.randomGen(to - from, seed);
     }
     
     function getReward(uint8 round, uint8 rank) public view returns (uint256) {
