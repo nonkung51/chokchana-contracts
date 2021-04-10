@@ -83,9 +83,10 @@ contract ChokchanaLottery is Ownable {
     function claimReward(uint256 ticketId) public {
         require(ticket.ownerOf(ticketId) == msg.sender, "Require owner of token!!");
         (uint256 number, uint256 round) = ticket.get(ticketId);
-        require(claimableReward[round][number] > 0, "You are not eligible for reward claim");
+        require(claimableReward[round][number] > 0, "You are not eligible for reward claim!");
 
-        
+        buyingCurrency.transfer(msg.sender, claimableReward[round][number]);
+        claimableReward[round][number] = 0;
     }
     
     function runRandom(uint256 from, uint256 to, uint256 seed) private view returns (uint256) {
