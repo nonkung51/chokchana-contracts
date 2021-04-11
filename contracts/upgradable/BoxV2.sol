@@ -3,7 +3,7 @@ pragma solidity ^0.8.3;
 
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
-contract Box is Initializable {
+contract BoxV2 is Initializable {
     uint256 private value;
 
     // Emitted when the stored value changes
