@@ -21,7 +21,6 @@ contract ChokchanaLottery is Ownable {
     uint256 carryOnReward;
     uint256 curReward;
     mapping(uint8 => uint256) rewardsPercentage;
-    mapping(uint256 => mapping(uint256 => bool)) mintedTickets;
     mapping(uint256 => mapping(uint8 => uint256)) rewardNumbers;
     mapping(uint256 => mapping(uint256 => uint256)) claimableReward;
     uint8 noOfRank;
@@ -49,16 +48,18 @@ contract ChokchanaLottery is Ownable {
         buyingCurrency.transferFrom(msg.sender, address(this), ticketPrice);
         curReward = curReward.add(ticketPrice);
         ticket.mint(number, msg.sender);
-        mintedTickets[curRound][number] = true;
     }
     
     function drawRewards() public onlyOwner {
         for (uint8 i = 0; i < noOfRank; i++) {
             (uint256 startNumber, uint256 endNumber) = ticket.range();
+            console.log('random in range: ', startNumber, endNumber);
+            console.log('got number: ', runRandom(startNumber, endNumber, i));
+            console.log('curRound: ', curRound);
             rewardNumbers[curRound][i] = runRandom(startNumber, endNumber, i);
         }
         distributeReward();
-        curRound.add(1);
+        curRound = curRound.add(1);
         ticket.nextRound();
         curReward = 0;
     }
