@@ -83,16 +83,23 @@ describe('ChokchanaLottery', function () {
 
         // try (every) buying ticket
         expect((await ticket.balanceOf(owner.address)).toNumber()).to.equal(0); // check balance before buying
-        for (let i = 10; i< 30; i++) {
+        for (let i = 10; i < 100; i++) {
             await lottery.buyTicket(i);
         }
 
         await lottery.drawRewards();
 
-        const firstWinner = (await lottery.getReward(1, 0)).toNumber();
-        console.log(`first winner: ${firstWinner}`, await (lottery.getClaimInfo(1, firstWinner)));
-        
-        console.log('total reward:', await (lottery.getTotalReward()));
+        let firstWinner = (await lottery.getReward(1, 0)).toNumber();
+        let secondWinner = (await lottery.getReward(1, 1)).toNumber();
+
+        firstWinner = (await (lottery.getClaimInfo(1, firstWinner))).toNumber();
+        secondWinner = (await (lottery.getClaimInfo(1, secondWinner))).toNumber();
+
+        // First winner + Second winner reward = allocatableReward
+        expect(firstWinner + secondWinner).to.equal(855);
+
+        // Next round total reward = 0
+        expect((await (lottery.getTotalReward())).toNumber()).to.equal(0); 
     });
 
     it('Should be able to claim reward', async function () {
@@ -130,9 +137,10 @@ describe('ChokchanaLottery', function () {
 
         await lottery.drawRewards();
 
-        const firstWinner = (await lottery.getReward(1, 0)).toNumber();
+        let firstWinner = (await lottery.getReward(1, 0)).toNumber();
         let firstWinnerId = 0;
 
+        // Find ID of first winner ticket
         for (let i = 0; i < 99; i++) {
             const [number,] = await ticket.get(i);
             if (number.toNumber() === firstWinner) {
@@ -140,15 +148,14 @@ describe('ChokchanaLottery', function () {
             }
         }
 
-        console.log('first winner', firstWinner);
+        firstWinner = (await (lottery.getClaimInfo(1, firstWinner))).toNumber();
+        const beforeClaim = (await thbToken.balanceOf(owner.address)).toNumber();
 
-        console.log('Balance before cliam: ', (await thbToken.balanceOf(owner.address)).toNumber());
-        
         await lottery.claimReward(firstWinnerId);
-
-        console.log('Balance after cliam: ', (await thbToken.balanceOf(owner.address)).toNumber());
+        expect((await thbToken.balanceOf(owner.address)).toNumber()).to.equal(beforeClaim + firstWinner)
     });
 
+    // TODO: improve test on test case after this
     it('Should be able to distribute reward (Multiple)', async function () {
         // deploy buyingToken
         const [owner, acc1] = await ethers.getSigners();
