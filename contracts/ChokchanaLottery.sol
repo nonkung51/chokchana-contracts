@@ -77,7 +77,6 @@ contract ChokchanaLottery is Ownable {
             (uint256 startNumber, uint256 endNumber) = ticket.range();
             console.log("random in range: ", startNumber, endNumber);
             console.log("got number: ", runRandom(startNumber, endNumber, i));
-            console.log("curRound: ", curRound);
             rewardNumbers[curRound][i] = runRandom(startNumber, endNumber, i);
         }
         distributeReward();
@@ -99,13 +98,14 @@ contract ChokchanaLottery is Ownable {
             // If picked reward is not bought then added it to carryOnReward for next round
             uint256 numOfTicket =
                 ticket.getNumberOf(curRound, rewardNumbers[curRound][i]);
+                console.log(numOfTicket, rewardNumbers[curRound][i]);
             if (numOfTicket != 0) {
                 claimableReward[curRound][
                     rewardNumbers[curRound][i]
                 ] = allocatableReward.mul(rewardsPercentage[i]).div(100).div(
                     numOfTicket
                 );
-                console.log(
+                console.log("Distribute reward: ",
                     claimableReward[curRound][rewardNumbers[curRound][i]],
                     rewardNumbers[curRound][i]
                 );
@@ -116,21 +116,23 @@ contract ChokchanaLottery is Ownable {
             }
         }
 
-        // This is intriguing...
-        if (claimableReward[curRound][rewardNumbers[curRound][0]] > 0) {
-            // distribute for 2nd digits
-            uint256 last2ndDigits = rewardNumbers[curRound][0].mod(100);
-            claimableReward[curRound][last2ndDigits] = allocatableReward
-                .mul(rewardsPercentage[noOfRank])
-                .div(100)
-                .div(endsWith[curRound][last2ndDigits] - 1);
-        } else {
-            // distribute for 2nd digits
-            uint256 last2ndDigits = rewardNumbers[curRound][0].mod(100);
-            claimableReward[curRound][last2ndDigits] = allocatableReward
-                .mul(rewardsPercentage[noOfRank])
-                .div(100)
-                .div(endsWith[curRound][last2ndDigits]);
+        if (rewardsPercentage[noOfRank] != 0) {
+            // This is intriguing...
+            if (claimableReward[curRound][rewardNumbers[curRound][0]] > 0) {
+                // distribute for 2nd digits
+                uint256 last2ndDigits = rewardNumbers[curRound][0].mod(100);
+                claimableReward[curRound][last2ndDigits] = allocatableReward
+                    .mul(rewardsPercentage[noOfRank])
+                    .div(100)
+                    .div(endsWith[curRound][last2ndDigits] - 1);
+            } else {
+                // distribute for 2nd digits
+                uint256 last2ndDigits = rewardNumbers[curRound][0].mod(100);
+                claimableReward[curRound][last2ndDigits] = allocatableReward
+                    .mul(rewardsPercentage[noOfRank])
+                    .div(100)
+                    .div(endsWith[curRound][last2ndDigits]);
+            }
         }
     }
 
@@ -156,15 +158,16 @@ contract ChokchanaLottery is Ownable {
             claimableReward[round][number] = claimableReward[round][number].sub(
                 claimableReward[round][number].div(numOfTicket)
             );
-        } else if(claimableReward[round][number.mod(100)] > 0) {
+        } else if (claimableReward[round][number.mod(100)] > 0) {
             uint256 numOfTicket = endsWith[round][number.mod(100)];
             buyingCurrency.transfer(
                 msg.sender,
                 claimableReward[round][number.mod(100)].div(numOfTicket)
             );
-            claimableReward[round][number.mod(100)] = claimableReward[round][number.mod(100)].sub(
-                claimableReward[round][number.mod(100)].div(numOfTicket)
-            );
+            claimableReward[round][number.mod(100)] = claimableReward[round][
+                number.mod(100)
+            ]
+                .sub(claimableReward[round][number.mod(100)].div(numOfTicket));
         }
         ticket.setClaim(ticketId);
     }
