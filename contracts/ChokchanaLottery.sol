@@ -20,9 +20,11 @@ contract ChokchanaLottery is Ownable {
     uint256 ticketPrice;
     uint256 carryOnReward;
     uint256 curReward;
+    // conserve last 2 indices for last 2 digits & 3 digits
     mapping(uint8 => uint256) rewardsPercentage;
     mapping(uint256 => mapping(uint8 => uint256)) rewardNumbers;
     mapping(uint256 => mapping(uint256 => uint256)) claimableReward;
+    mapping(uint256 => mapping(uint256 => uint256)) endsWith;
     uint8 noOfRank;
     
     constructor(address _ticket, address _buyingCurrency, uint8 _noOfRank, uint256 _ticketPrice) Ownable() {
@@ -34,7 +36,8 @@ contract ChokchanaLottery is Ownable {
     }
 
     function setReward(uint8 rank, uint256 percentage) public onlyOwner {
-        require(rank < noOfRank, "require rank to be less than number of rank!");
+        // last 2 rank will be use as percentage for last 2 digits, 3 digits reward
+        require(rank < noOfRank + 2, "require rank to be less than number of rank!");
         require(rank >= 0, "require rank to be more than 0!!");
         require(percentage <= 100, "require percentage to be in range 1 - 100!!");
         require(percentage > 0, "require percentage to be more than 0!!");
@@ -46,6 +49,21 @@ contract ChokchanaLottery is Ownable {
 
     function buyTicket(uint256 number) public {
         buyingCurrency.transferFrom(msg.sender, address(this), ticketPrice);
+
+        // For 2nd digits reward
+        if (endsWith[curRound][number.mod(100)] == 0) {
+            endsWith[curRound][number.mod(100)] = 1;
+        } else {
+            endsWith[curRound][number.mod(100)] += 1;
+        }
+
+        // For 3rd digits reward
+        if (endsWith[curRound][number.mod(1000)] == 0) {
+            endsWith[curRound][number.mod(1000)] = 1;
+        } else {
+            endsWith[curRound][number.mod(1000)] += 1;
+        }
+
         curReward = curReward.add(ticketPrice);
         ticket.mint(number, msg.sender);
     }
@@ -70,6 +88,7 @@ contract ChokchanaLottery is Ownable {
         console.log('curReward', curReward);
         console.log('allocatableReward', allocatableReward);
 
+        // distribute reward for generic reward
         for (uint8 i = 0; i < noOfRank; i++) {
             // Holy fuck!! please don't bug!!
             // If picked reward is not bought then added it to carryOnReward for next round
@@ -80,7 +99,9 @@ contract ChokchanaLottery is Ownable {
             } else {
                 carryOnReward += allocatableReward.mul(rewardsPercentage[i]).div(100);
             }
-        }   
+        }
+
+        // distribute for 3rd digits
     }
 
     function claimReward(uint256 ticketId) public {
