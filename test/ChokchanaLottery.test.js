@@ -155,7 +155,6 @@ describe('ChokchanaLottery', function () {
         expect((await thbToken.balanceOf(owner.address)).toNumber()).to.equal(beforeClaim + firstWinner)
     });
 
-    // TODO: improve test on test case after this
     it('Should be able to distribute reward (Multiple)', async function () {
         // deploy buyingToken
         const [owner, acc1] = await ethers.getSigners();
@@ -189,18 +188,27 @@ describe('ChokchanaLottery', function () {
             await lottery.buyTicket(i);
         }
 
-        for (let i = 10; i< 100; i++) {
+        for (let i = 10; i < 100; i++) {
             await lottery.buyTicket(i);
         }
 
         await lottery.drawRewards();
 
-        const firstWinner = (await lottery.getReward(1, 0)).toNumber();
-        console.log(`first winner: ${firstWinner}`, (await (lottery.getClaimInfo(1, firstWinner))).toNumber());
         
-        console.log('total reward:', await (lottery.getTotalReward()));
+        let firstWinner = (await lottery.getReward(1, 0)).toNumber();
+        let secondWinner = (await lottery.getReward(1, 1)).toNumber();
+
+        firstWinner = (await (lottery.getClaimInfo(1, firstWinner))).toNumber();
+        secondWinner = (await (lottery.getClaimInfo(1, secondWinner))).toNumber();
+
+        // First winner + Second winner reward = allocatableReward
+        expect(firstWinner + secondWinner).to.equal(1800 * 0.95 * 0.5);
+
+        // Next round total reward = 0
+        expect((await (lottery.getTotalReward())).toNumber()).to.equal(0); 
     });
 
+    // TODO: improve test on test case after this
     it('Should be able to claim reward (Multiple)', async function () {
         // deploy buyingToken
         const [owner, acc1] = await ethers.getSigners();
