@@ -3,7 +3,7 @@
 pragma solidity ^0.8.3;
 
 import "hardhat/console.sol";
-import "./libraries/RandomGenerate.sol";
+import "../libraries/RandomGenerate.sol";
 
 contract Random {
     uint256 public randomNum;

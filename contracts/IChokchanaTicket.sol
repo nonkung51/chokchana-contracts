@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.3;
 
+// This is just interface
 interface IChokchanaTicket {
     // Chokchana
     function nextRound() external;
