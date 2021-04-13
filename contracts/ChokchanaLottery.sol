@@ -13,20 +13,31 @@ import "./IChokchanaTicket.sol";
 contract ChokchanaLottery is Ownable {
     using SafeMath for uint256;
 
+    // Interface for ticket and THBToken
     IChokchanaTicket ticket;
     IERC20 buyingCurrency;
 
+    // current round of reward pool
     uint256 curRound;
+    // price of ticket
     uint256 ticketPrice;
+    // amount of buyingCurrency when no people got the reward carry to next round
     uint256 carryOnReward;
+    // Reward as of now
     uint256 curReward;
+    // percentage of reward for each rank
     // conserve last index for last 2 digit
     mapping(uint8 => uint256) rewardsPercentage;
+    // lucky number!
     mapping(uint256 => mapping(uint8 => uint256)) rewardNumbers;
+    // claimable reward for each numbers
     mapping(uint256 => mapping(uint256 => uint256)) claimableReward;
+    // this keep track for pool that have last 2 digits reward
     mapping(uint256 => mapping(uint256 => uint256)) endsWith;
+    // how many rank of reward of this pool
     uint8 noOfRank;
 
+    // Initialize everything
     constructor(
         address _ticket,
         address _buyingCurrency,
@@ -40,6 +51,7 @@ contract ChokchanaLottery is Ownable {
         ticketPrice = _ticketPrice;
     }
 
+    // set reward for each rank
     function setReward(uint8 rank, uint256 percentage) public onlyOwner {
         // last rank will be use as percentage for last 2 digits reward
         require(
@@ -53,80 +65,86 @@ contract ChokchanaLottery is Ownable {
         );
         require(percentage > 0, "require percentage to be more than 0!!");
 
-        // TODO: This might be not so safe!
-
         rewardsPercentage[rank] = percentage;
     }
 
     function buyTicket(uint256 number) public {
+        // transfer buying currency to this contract
         buyingCurrency.transferFrom(msg.sender, address(this), ticketPrice);
 
-        // For 2nd digits reward
+        // keep track last 2nd digits
+        // For last 2nd digits reward
         if (endsWith[curRound][number.mod(100)] == 0) {
             endsWith[curRound][number.mod(100)] = 1;
         } else {
             endsWith[curRound][number.mod(100)] += 1;
         }
 
+        // add ticketPrice to curReward
         curReward = curReward.add(ticketPrice);
+        // mint ticket NFT then transfer to msg.sender
         ticket.mint(number, msg.sender);
     }
 
+    // Draw reward
     function drawRewards() public onlyOwner {
+        // generate random number for each rank
         for (uint8 i = 0; i < noOfRank; i++) {
             (uint256 startNumber, uint256 endNumber) = ticket.range();
-            console.log("random in range: ", startNumber, endNumber);
-            console.log("got number: ", runRandom(startNumber, endNumber, i));
             rewardNumbers[curRound][i] = runRandom(startNumber, endNumber, i);
         }
         distributeReward();
+
+        // set up for next round
         curRound = curRound.add(1);
         ticket.nextRound();
         curReward = 0;
     }
 
     function distributeReward() private {
+        // how much reward will be avalible to distribute?
+        // we keep some of it to the pool as fee
         uint256 allocatableReward =
             curReward.mul(95).div(100).add(carryOnReward);
-
-        console.log("curReward", curReward);
-        console.log("allocatableReward", allocatableReward);
 
         // distribute reward for generic reward
         for (uint8 i = 0; i < noOfRank; i++) {
             // Holy fuck!! please don't bug!!
             // If picked reward is not bought then added it to carryOnReward for next round
+
+            // get how many ticket with ticket number (ticket number that avalible to claim reward)
             uint256 numOfTicket =
                 ticket.getNumberOf(curRound, rewardNumbers[curRound][i]);
-                console.log(numOfTicket, rewardNumbers[curRound][i]);
+
+            
             if (numOfTicket != 0) {
+                // if there ticket with that number bought update value of claimableReward
                 claimableReward[curRound][
                     rewardNumbers[curRound][i]
                 ] = allocatableReward.mul(rewardsPercentage[i]).div(100).div(
                     numOfTicket
                 );
-                console.log("Distribute reward: ",
-                    claimableReward[curRound][rewardNumbers[curRound][i]],
-                    rewardNumbers[curRound][i]
-                );
             } else {
+                // if no ticket with that number bought!
                 carryOnReward += allocatableReward
                     .mul(rewardsPercentage[i])
                     .div(100);
             }
         }
 
+        // distribute for 2nd digits
+        // first checking if this pool set up for last 2nd digits reward
         if (rewardsPercentage[noOfRank] != 0) {
             // This is intriguing...
+
+            // check if pool has first rank reward so we can assign claimableReward correctly
             if (claimableReward[curRound][rewardNumbers[curRound][0]] > 0) {
-                // distribute for 2nd digits
                 uint256 last2ndDigits = rewardNumbers[curRound][0].mod(100);
                 claimableReward[curRound][last2ndDigits] = allocatableReward
                     .mul(rewardsPercentage[noOfRank])
                     .div(100)
                     .div(endsWith[curRound][last2ndDigits] - 1);
             } else {
-                // distribute for 2nd digits
                 uint256 last2ndDigits = rewardNumbers[curRound][0].mod(100);
                 claimableReward[curRound][last2ndDigits] = allocatableReward
                     .mul(rewardsPercentage[noOfRank])
@@ -136,11 +154,13 @@ contract ChokchanaLottery is Ownable {
         }
     }
 
+    // claimReward with ticketId
     function claimReward(uint256 ticketId) public {
         require(
             ticket.ownerOf(ticketId) == msg.sender,
             "Require owner of token!!"
         );
+        // get ticket info
         (uint256 number, uint256 round, bool claimed) = ticket.get(ticketId);
         require(
             (claimableReward[round][number] > 0) ||
@@ -149,6 +169,8 @@ contract ChokchanaLottery is Ownable {
         );
         require(!claimed, "You already claim reward!");
 
+        // if ticket got whole number reward
+        // else if for ticket got last 2nd digits reward
         if (claimableReward[round][number] > 0) {
             uint256 numOfTicket = ticket.getNumberOf(round, number);
             buyingCurrency.transfer(
@@ -169,6 +191,8 @@ contract ChokchanaLottery is Ownable {
             ]
                 .sub(claimableReward[round][number.mod(100)].div(numOfTicket));
         }
+
+        // set ticket is claimed
         ticket.setClaim(ticketId);
     }
 
@@ -180,6 +204,8 @@ contract ChokchanaLottery is Ownable {
         return from + RandomGenerate.randomGen(to - from, seed);
     }
 
+    // get number that got reward
+    // TODO: maybe changing the name?
     function getReward(uint8 round, uint8 rank) public view returns (uint256) {
         return rewardNumbers[round][rank];
     }
