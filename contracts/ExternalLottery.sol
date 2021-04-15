@@ -38,6 +38,28 @@ contract ExternalLottery is Ownable {
         ticketPrice = _ticketPrice;
     }
 
+    function setRewardNumber(uint8 _rank, uint256 _rewardNumber) public onlyOwner() {
+        rewardNumbers[curRound][_rank] = _rewardNumber;
+    }
+
+    function setClaimableReward(uint8 rank, uint256 reward) public onlyOwner() {
+        claimableReward[rank] = reward;
+    }
+
+    function nextRound() public onlyOwner() {
+        curRound = curRound.add(1);
+    }
+
+    function claimReward(uint256 ticketId, uint8 rank) public {
+        (uint256 number, uint256 round, bool claimed) = ticket.get(ticketId);
+        require(
+            number == rewardNumbers[round][rank],
+            "You are not eligible to claim this reward!"
+        );
+        require(!claimed, "You already claim reward!");
+        buyingCurrency.transfer(msg.sender, claimableReward[rank]);
+    }
+
     function buyTicket(uint256 number) public {
         // transfer buying currency to this contract
         buyingCurrency.transferFrom(msg.sender, address(this), ticketPrice);
