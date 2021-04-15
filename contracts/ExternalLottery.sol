@@ -47,6 +47,7 @@ contract ExternalLottery is Ownable {
     }
 
     function nextRound() public onlyOwner() {
+        ticket.nextRound();
         curRound = curRound.add(1);
     }
 

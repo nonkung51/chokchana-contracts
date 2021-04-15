@@ -11,6 +11,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 
 contract ChokchanaTicket is ERC721, ERC721Enumerable, Ownable {
+
+    struct Ticket {
+        uint256 number;
+        uint256 round;
+        bool claimed;
+    }
+
     // curId keep track of last id of NFT generated
     uint256 curId;
     // current round of reward pools
@@ -88,8 +95,13 @@ contract ChokchanaTicket is ERC721, ERC721Enumerable, Ownable {
     }
     
     // get info of each ticket
-    function get(uint256 id) public view returns(uint256, uint256, bool) {
-        return (numbers[rounds[id]][id], rounds[id], claimed[id]);
+    function get(uint256 id) public view returns(Ticket memory) {
+        return Ticket(numbers[rounds[id]][id], rounds[id], claimed[id]);
+    }
+
+    // get info of msg.sender by index
+    function getTicketOfByIndex(uint256 index) public view returns(Ticket memory) {
+        return get(tokenOfOwnerByIndex(msg.sender, index));
     }
     
     // get number of ticket of that ticket numbers minted
