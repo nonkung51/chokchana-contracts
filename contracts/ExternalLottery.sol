@@ -37,4 +37,13 @@ contract ExternalLottery is Ownable {
         curRound = 1;
         ticketPrice = _ticketPrice;
     }
+
+    function buyTicket(uint256 number) public {
+        // transfer buying currency to this contract
+        buyingCurrency.transferFrom(msg.sender, address(this), ticketPrice);
+        // add ticketPrice to curReward
+        curDeposit = curDeposit.add(ticketPrice);
+        // mint ticket NFT then transfer to msg.sender
+        ticket.mint(number, msg.sender);
+    }
 }
