@@ -2,7 +2,10 @@
 
 pragma solidity ^0.8.3;
 
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBase.sol";
+
+import "./IChokchanaTicket.sol";
 
 interface IChokchanaLottery {
     function setRewardNumber(uint8 rank, uint256 number) external;
@@ -10,11 +13,13 @@ interface IChokchanaLottery {
 }
 
 contract RandomGenerator is VRFConsumerBase {
+    using SafeMath for uint256;
     
     bytes32 internal keyHash;
     uint256 internal fee;
     
     IChokchanaLottery chokchanaLottery;
+    IChokchanaTicket chokchanaTicket;
     
     uint256 curRound;
     uint8 noOfRank;
@@ -29,12 +34,13 @@ contract RandomGenerator is VRFConsumerBase {
      * LINK token address:                0xa36085F69e2889c224210F603D836748e7dC0088
      * Key Hash: 0x6c3699283bda56ad74f6b855546325b68d482e983852a7a82979cc4807b641f4
      */
-    constructor(address _chokchanaLottery, uint8 _noOfRank) 
+    constructor(address _chokchanaLottery, address _chokchanaTicket, uint8 _noOfRank) 
         VRFConsumerBase(
             0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9, // VRF Coordinator
             0xa36085F69e2889c224210F603D836748e7dC0088  // LINK Token
-        ) public
+        )
     {
+        chokchanaTicket = IChokchanaTicket(_chokchanaTicket);
         chokchanaLottery = IChokchanaLottery(_chokchanaLottery);
         noOfRank = _noOfRank;
         curRound = 1;
@@ -54,7 +60,9 @@ contract RandomGenerator is VRFConsumerBase {
     /**
      * Callback function used by VRF Coordinator
      */
-    function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
+    function fulfillRandomness(bytes32, uint256 randomness) internal override {
+        (uint256 start, uint256 end) = chokchanaTicket.range();
+        randomness = start.add(randomness.mod(end.sub(start)));
         numbers[curRound][alreadyGenerate] = randomness;
         chokchanaLottery.setRewardNumber(alreadyGenerate, randomness);
         if (alreadyGenerate < noOfRank) {
