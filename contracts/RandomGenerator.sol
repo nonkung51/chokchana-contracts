@@ -49,10 +49,15 @@ contract RandomGenerator is VRFConsumerBase {
         fee = 0.1 * 10 ** 18; // 0.1 LINK (varies by network)
     }
     
+        
+    function drawRewards() public {
+        getRandomNumber(block.difficulty);
+    }
+
     /** 
      * Requests randomness from a user-provided seed
      */
-    function getRandomNumber(uint256 userProvidedSeed) public returns (bytes32 requestId) {
+    function getRandomNumber(uint256 userProvidedSeed) private returns (bytes32 requestId) {
         require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK - fill contract with faucet");
         return requestRandomness(keyHash, fee, userProvidedSeed);
     }
