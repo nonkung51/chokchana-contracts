@@ -3,7 +3,6 @@ pragma solidity ^0.8.3;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "hardhat/console.sol";
 
 import "./libraries/RandomGenerate.sol";
 import "./IChokchanaTicket.sol";
@@ -25,6 +24,8 @@ contract ExternalLottery is Ownable {
     mapping(uint256 => mapping(uint8 => uint256)) rewardNumbers;
     // claimable reward for each rank
     mapping(uint8 => uint256) claimableReward;
+    // is pool in buying period
+    bool public buyingPeriod;
 
     // Initialize everything
     constructor(
@@ -38,19 +39,33 @@ contract ExternalLottery is Ownable {
         ticketPrice = _ticketPrice;
     }
 
+    // getter for buyingPeriod
+    function getBuyingPeriod() public view returns(bool) {
+        return buyingPeriod;
+    }
+
+    // setter for buyingPeriod
+    function setBuyingPeriod(bool _buyingPeriod) public {
+        buyingPeriod = _buyingPeriod;
+    }
+
+    // setter for lucky number!!
     function setRewardNumber(uint8 _rank, uint256 _rewardNumber) public onlyOwner() {
         rewardNumbers[curRound][_rank] = _rewardNumber;
     }
 
+    // set reward for each number
     function setClaimableReward(uint8 rank, uint256 reward) public onlyOwner() {
         claimableReward[rank] = reward;
     }
 
+    // go to next round of lottery
     function nextRound() public onlyOwner() {
         ticket.nextRound();
         curRound = curRound.add(1);
     }
 
+    // claim reward
     function claimReward(uint256 ticketId, uint8 rank) public {
         (uint256 number, uint256 round, bool claimed) = ticket.get(ticketId);
         require(
@@ -62,6 +77,7 @@ contract ExternalLottery is Ownable {
     }
 
     function buyTicket(uint256 number) public {
+        require(buyingPeriod == true, "You have to buy ticket in buying period!");
         // transfer buying currency to this contract
         buyingCurrency.transferFrom(msg.sender, address(this), ticketPrice);
         // add ticketPrice to curReward

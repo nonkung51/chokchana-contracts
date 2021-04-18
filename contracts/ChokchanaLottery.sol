@@ -5,7 +5,6 @@ pragma solidity ^0.8.3;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "hardhat/console.sol";
 
 import "./libraries/RandomGenerate.sol";
 import "./IChokchanaTicket.sol";
@@ -36,6 +35,8 @@ contract ChokchanaLottery is Ownable {
     mapping(uint256 => mapping(uint256 => uint256)) endsWith;
     // how many rank of reward of this pool
     uint8 noOfRank;
+    // is pool in buying period
+    bool public buyingPeriod;
 
     // Initialize everything
     constructor(
@@ -51,8 +52,18 @@ contract ChokchanaLottery is Ownable {
         ticketPrice = _ticketPrice;
     }
 
+    // getter for buyingPeriod
+    function getBuyingPeriod() public view returns(bool) {
+        return buyingPeriod;
+    }
+
+    // setter for buyingPeriod
+    function setBuyingPeriod(bool _buyingPeriod) public {
+        buyingPeriod = _buyingPeriod;
+    }
+
     // set reward for each rank
-    function setReward(uint8 rank, uint256 percentage) public onlyOwner {
+    function setReward(uint8 rank, uint256 percentage) public {
         // last rank will be use as percentage for last 2 digits reward
         require(
             rank <= noOfRank + 1,
@@ -69,6 +80,7 @@ contract ChokchanaLottery is Ownable {
     }
 
     function buyTicket(uint256 number) public {
+        require(buyingPeriod == true, "You have to buy ticket in buying period!");
         // transfer buying currency to this contract
         buyingCurrency.transferFrom(msg.sender, address(this), ticketPrice);
 
@@ -87,7 +99,7 @@ contract ChokchanaLottery is Ownable {
     }
 
     // Draw reward
-    function drawRewards() public onlyOwner {
+    function drawRewards() public {
         // generate random number for each rank
         for (uint8 i = 0; i < noOfRank; i++) {
             (uint256 startNumber, uint256 endNumber) = ticket.range();
