@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import "./libraries/RandomGenerate.sol";
 import "./IChokchanaTicket.sol";
 
 contract ChokchanaLottery is Ownable {
@@ -97,14 +96,9 @@ contract ChokchanaLottery is Ownable {
         // mint ticket NFT then transfer to msg.sender
         ticket.mint(number, msg.sender);
     }
-
+    
     // Draw reward
-    function drawRewards() public {
-        // generate random number for each rank
-        for (uint8 i = 0; i < noOfRank; i++) {
-            (uint256 startNumber, uint256 endNumber) = ticket.range();
-            rewardNumbers[curRound][i] = runRandom(startNumber, endNumber, i);
-        }
+    function summarizedRewards() public {
         distributeReward();
 
         // set up for next round
@@ -206,14 +200,6 @@ contract ChokchanaLottery is Ownable {
 
         // set ticket is claimed
         ticket.setClaim(ticketId);
-    }
-
-    function runRandom(
-        uint256 from,
-        uint256 to,
-        uint256 seed
-    ) private view returns (uint256) {
-        return from + RandomGenerate.randomGen(to - from, seed);
     }
 
     // get number that got reward
