@@ -78,6 +78,11 @@ contract ChokchanaLottery is Ownable {
         rewardsPercentage[rank] = percentage;
     }
 
+    // for external to set reward
+    function setRewardNumber(uint8 rank, uint256 number) public {
+        rewardNumbers[curRound][rank] = number;
+    }
+
     function buyTicket(uint256 number) public {
         require(buyingPeriod == true, "You have to buy ticket in buying period!");
         // transfer buying currency to this contract
