@@ -55,6 +55,11 @@ contract ChokchanaLottery is Ownable {
     function getBuyingPeriod() public view returns(bool) {
         return buyingPeriod;
     }
+    
+    // getter for curRound
+    function getCurRound() public view returns(uint256) {
+        return curRound;
+    }
 
     // setter for buyingPeriod
     function setBuyingPeriod(bool _buyingPeriod) public {
