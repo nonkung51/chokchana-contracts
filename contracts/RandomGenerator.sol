@@ -1,8 +1,7 @@
-// SPDX-License-Identifier: GPL-3.0
+// This example code is designed to quickly deploy an example contract using Remix.
 
 pragma solidity ^0.8.3;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBase.sol";
 
 import "./IChokchanaTicket.sol";
@@ -12,19 +11,15 @@ interface IChokchanaLottery {
     function summarizedRewards() external;
 }
 
+
 contract RandomGenerator is VRFConsumerBase {
-    using SafeMath for uint256;
+    uint8 noOfRank;
     
     bytes32 internal keyHash;
     uint256 internal fee;
     
     IChokchanaLottery chokchanaLottery;
     IChokchanaTicket chokchanaTicket;
-    
-    uint256 curRound;
-    uint8 noOfRank;
-    uint8 private alreadyGenerate;
-    mapping(uint256 => mapping(uint8 => uint256)) numbers;
     
     /**
      * Constructor inherits VRFConsumerBase
@@ -38,26 +33,20 @@ contract RandomGenerator is VRFConsumerBase {
         VRFConsumerBase(
             0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9, // VRF Coordinator
             0xa36085F69e2889c224210F603D836748e7dC0088  // LINK Token
-        )
+        ) public
     {
         chokchanaTicket = IChokchanaTicket(_chokchanaTicket);
         chokchanaLottery = IChokchanaLottery(_chokchanaLottery);
         noOfRank = _noOfRank;
-        curRound = 1;
-        alreadyGenerate = 0;
         keyHash = 0x6c3699283bda56ad74f6b855546325b68d482e983852a7a82979cc4807b641f4;
-        fee = 0.1 * 10 ** 18; // 0.1 LINK (varies by network)
+        fee = 0.1 * 10 ** 18; // 0.1 LINK
     }
     
-        
-    function drawRewards() public {
+    function drawRandomReward() public {
         getRandomNumber(block.difficulty);
     }
-
-    /** 
-     * Requests randomness from a user-provided seed
-     */
-    function getRandomNumber(uint256 userProvidedSeed) private returns (bytes32 requestId) {
+    
+    function getRandomNumber(uint256 userProvidedSeed) public returns (bytes32 requestId) {
         require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK - fill contract with faucet");
         return requestRandomness(keyHash, fee, userProvidedSeed);
     }
@@ -65,22 +54,22 @@ contract RandomGenerator is VRFConsumerBase {
     /**
      * Callback function used by VRF Coordinator
      */
-    function fulfillRandomness(bytes32, uint256 randomness) internal override {
+    function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
         (uint256 start, uint256 end) = chokchanaTicket.range();
-        randomness = start.add(randomness.mod(end.sub(start)));
-        numbers[curRound][alreadyGenerate] = randomness;
-        chokchanaLottery.setRewardNumber(alreadyGenerate, randomness);
-        if (alreadyGenerate < noOfRank) {
-            alreadyGenerate += 1;
-            getRandomNumber(block.difficulty);
-        } else {
-            chokchanaLottery.summarizedRewards();
-            alreadyGenerate = 0;
-            curRound += 1;
+        for (uint8 i = 1; i <= noOfRank; i++) {
+            uint256 _randomness = start + uint256(keccak256(abi.encode(randomness, i))) % (end - start);
+            chokchanaLottery.setRewardNumber(i, _randomness);
         }
+        chokchanaLottery.summarizedRewards();
     }
     
-    function getGenerateNumber(uint256 round, uint8 rank) public view returns (uint256) {
-        return numbers[round][rank];
+    /**
+     * Withdraw LINK from this contract
+     * 
+     * DO NOT USE THIS IN PRODUCTION AS IT CAN BE CALLED BY ANY ADDRESS.
+     * THIS IS PURELY FOR EXAMPLE PURPOSES.
+     */
+    function withdrawLink() external {
+        require(LINK.transfer(msg.sender, LINK.balanceOf(address(this))), "Unable to transfer");
     }
 }
