@@ -27,16 +27,43 @@ contract ExternalLottery is Ownable {
     // is pool in buying period
     bool public buyingPeriod;
 
+    //******Time
+    uint public startThisRound;
+    uint public nextDraw;
+    uint public lockBeforeDraw;
+    uint public canBuyTime;
+
     // Initialize everything
     constructor(
         address _ticket,
         address _buyingCurrency,
-        uint256 _ticketPrice
+        uint256 _ticketPrice,
+
+        uint _nextDraw,//******Time
+        uint _lockBeforeDraw
     ) Ownable() {
         ticket = IChokchanaTicket(_ticket);
         buyingCurrency = IERC20(_buyingCurrency);
         curRound = 1;
         ticketPrice = _ticketPrice;
+
+        startThisRound = block.timestamp; //******Time
+        nextDraw = _nextDraw;
+        lockBeforeDraw = _lockBeforeDraw;
+        canBuyTime = startThisRound + nextDraw - lockBeforeDraw;
+        buyingPeriod = true;
+    }
+
+    function setNextDraw(uint _nextDraw) public {
+        startThisRound = block.timestamp;
+        nextDraw = _nextDraw;
+        canBuyTime = startThisRound + nextDraw - lockBeforeDraw;
+    }
+    
+    function setlockBeforeDraw(uint _lockBeforeDraw) public {
+        startThisRound = block.timestamp;
+        lockBeforeDraw = _lockBeforeDraw;
+        canBuyTime = startThisRound + nextDraw - lockBeforeDraw;
     }
 
     // getter for buyingPeriod
@@ -77,6 +104,16 @@ contract ExternalLottery is Ownable {
     }
 
     function buyTicket(uint256 number) public {
+        //******Time
+        console.log("Buying At: ");
+        console.log(block.timestamp, canBuyTime);
+        if(block.timestamp < canBuyTime){
+            buyingPeriod = true;
+        }
+        else{
+            buyingPeriod = false;
+        }
+        
         require(buyingPeriod == true, "You have to buy ticket in buying period!");
         // transfer buying currency to this contract
         buyingCurrency.transferFrom(msg.sender, address(this), ticketPrice);

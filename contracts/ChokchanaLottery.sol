@@ -49,6 +49,7 @@ contract ChokchanaLottery is Ownable {
         curRound = 1;
         noOfRank = _noOfRank;
         ticketPrice = _ticketPrice;
+        buyingPeriod = true;
     }
 
     // getter for buyingPeriod
@@ -122,6 +123,7 @@ contract ChokchanaLottery is Ownable {
         // we keep some of it to the pool as fee
         uint256 allocatableReward =
             curReward.mul(95).div(100).add(carryOnReward);
+        carryOnReward = 0;
 
         // distribute reward for generic reward
         for (uint8 i = 0; i < noOfRank; i++) {
